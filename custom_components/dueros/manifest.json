@@ -1,0 +1,13 @@
+{
+  "domain": "dueros",
+  "name": "DuerOS Integration",
+  "codeowners": [
+    "@zsy056"
+  ],
+  "config_flow": true,
+  "documentation": "https://github.com/zsy056/dueros-ha",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/zsy056/dueros-ha/issues",
+  "version": "0.0.1"
+}
