@@ -49,6 +49,7 @@ class DuerOSCover(CoverEntity, DuerOSEntity):
             return
         if TurnOnState.OFF == self._appliance.state_settings.turn_on_state.value:
             self._attr_is_closed = True
+            self._attr_current_cover_position = 0
         else:
             self._attr_is_closed = False
             if self._appliance.state_settings.degree.value:
