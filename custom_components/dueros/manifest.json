@@ -9,5 +9,8 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/zsy056/dueros-ha/issues",
-  "version": "0.0.1"
+  "version": "0.0.1",
+  "requirements": [
+    "dueros-smarthome==0.0.15"
+  ]
 }
