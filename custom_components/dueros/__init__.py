@@ -14,9 +14,7 @@ from homeassistant.core import HomeAssistant
 from .const import DOMAIN, BDUSS
 from .coordinator import DuerOSDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [
-    Platform.LIGHT,
-]
+PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.COVER]
 
 
 # https://developers.home-assistant.io/docs/config_entries_index/#setting-up-an-entry

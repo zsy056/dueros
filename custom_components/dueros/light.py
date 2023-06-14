@@ -1,6 +1,5 @@
 """Light platform for Duer OS."""
 
-from dueros_smarthome.const import STATUS_OK, STATUS_NOT_LOGIN
 from dueros_smarthome.models import (
     Appliance,
     ApplianceType,
@@ -15,13 +14,11 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
 )
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, IntegrationError
 from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, BRIGHTNESS_MAX, LOGGER
+from .const import DOMAIN, BRIGHTNESS_MAX
 from .entity import DuerOSEntity
 
 
@@ -56,10 +53,12 @@ class DuerOSLight(LightEntity, DuerOSEntity):
     @staticmethod
     def brightness_ha_to_dueros(brightness: int) -> Brightness:
         """Convert HA brightness to DuerOS"""
-        return Brightness(1 + (brightness - 1) * 100 / BRIGHTNESS_MAX)
+        return Brightness(1 + int((brightness - 1) * 100 / BRIGHTNESS_MAX))
 
     def _update(self, appliance: Appliance) -> None:
         super()._update(appliance)
+        if not self.available:
+            return
         self._attr_entity_picture = self._appliance.icon_urls[0]
         if self._appliance.state_settings.brightness.value:
             self._attr_brightness = DuerOSLight.brightness_dueros_to_ha(
@@ -79,40 +78,28 @@ class DuerOSLight(LightEntity, DuerOSEntity):
             self._appliance.state_settings.turn_on_state.value == TurnOnState.ON
         )
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        self._update(self.coordinator.data[self.unique_id])
-
     async def _set_brightness(self, appliance_id: str, brightness: int):
         """Set brightness."""
         rsp = await self.coordinator.client.set_brightness_percentage(
             appliance_id, DuerOSLight.brightness_ha_to_dueros(brightness)
         )
-        if STATUS_NOT_LOGIN == rsp.status:
-            LOGGER.error(rsp.msg)
-            raise ConfigEntryAuthFailed(rsp.msg)
-        if STATUS_OK != rsp.status:
-            LOGGER.error(rsp.msg)
-            raise IntegrationError(rsp.msg)
+        DuerOSEntity._check_response(rsp)
 
     async def _set_color_temp(self, appliance_id: str, color_temp_kelvin: int):
         """Set color temp."""
         color_temp = ColorTemperatureInKelvin(
             1
-            + (color_temp_kelvin - self.min_color_temp_kelvin)
-            / (self.max_color_temp_kelvin - self.min_color_temp_kelvin),
+            + int(
+                (color_temp_kelvin - self.min_color_temp_kelvin)
+                / (self.max_color_temp_kelvin - self.min_color_temp_kelvin)
+            ),
             self.min_color_temp_kelvin,
             self.max_color_temp_kelvin,
         )
         rsp = await self.coordinator.client.set_color_temperature(
             appliance_id, color_temp
         )
-        if STATUS_NOT_LOGIN == rsp.status:
-            LOGGER.error(rsp.msg)
-            raise ConfigEntryAuthFailed(rsp.msg)
-        if STATUS_OK != rsp.status:
-            LOGGER.error(rsp.msg)
-            raise IntegrationError(rsp.msg)
+        DuerOSEntity._check_response(rsp)
 
     async def async_turn_on(self, **kwargs):
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
@@ -125,20 +112,10 @@ class DuerOSLight(LightEntity, DuerOSEntity):
         await self._set_color_temp(self._appliance.appliance_id, color_temp_in_kelvin)
         self._attr_is_on = True
         rsp = await self.coordinator.client.turn_on(self._appliance.appliance_id)
-        if STATUS_NOT_LOGIN == rsp.status:
-            LOGGER.error(rsp.msg)
-            raise ConfigEntryAuthFailed(rsp.msg)
-        if STATUS_OK != rsp.status:
-            LOGGER.error(rsp.msg)
-            raise IntegrationError(rsp.msg)
+        DuerOSEntity._check_response(rsp)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
         rsp = await self.coordinator.client.turn_off(self._appliance.appliance_id)
-        if STATUS_NOT_LOGIN == rsp.status:
-            LOGGER.error(rsp.msg)
-            raise ConfigEntryAuthFailed(rsp.msg)
-        if STATUS_OK != rsp.status:
-            LOGGER.error(rsp.msg)
-            raise IntegrationError(rsp.msg)
+        DuerOSEntity._check_response(rsp)
         await self.coordinator.async_request_refresh()
