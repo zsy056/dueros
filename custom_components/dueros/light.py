@@ -103,13 +103,17 @@ class DuerOSLight(LightEntity, DuerOSEntity):
 
     async def async_turn_on(self, **kwargs):
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-        self._attr_brightness = brightness
-        await self._set_brightness(self._appliance.appliance_id, brightness)
+        if brightness:
+            self._attr_brightness = brightness
+            await self._set_brightness(self._appliance.appliance_id, brightness)
         color_temp_in_kelvin = kwargs.get(
             ATTR_COLOR_TEMP_KELVIN, self.color_temp_kelvin
         )
-        self._attr_color_temp_kelvin = color_temp_in_kelvin
-        await self._set_color_temp(self._appliance.appliance_id, color_temp_in_kelvin)
+        if color_temp_in_kelvin:
+            self._attr_color_temp_kelvin = color_temp_in_kelvin
+            await self._set_color_temp(
+                self._appliance.appliance_id, color_temp_in_kelvin
+            )
         self._attr_is_on = True
         rsp = await self.coordinator.client.turn_on(self._appliance.appliance_id)
         DuerOSEntity._check_response(rsp)
