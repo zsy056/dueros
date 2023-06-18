@@ -39,7 +39,7 @@ class DuerOSCover(CoverEntity, DuerOSEntity):
             self._attr_supported_features = (
                 CoverEntityFeature.OPEN
                 | CoverEntityFeature.CLOSE
-                | CoverEntityFeature.SET_POSITION
+                # | CoverEntityFeature.SET_POSITION
                 | CoverEntityFeature.STOP
             )
 
