@@ -18,7 +18,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN, BRIGHTNESS_MAX
+from .const import DOMAIN, BRIGHTNESS_MAX, LOGGER
 from .entity import DuerOSEntity
 
 
@@ -80,6 +80,7 @@ class DuerOSLight(LightEntity, DuerOSEntity):
 
     async def _set_brightness(self, appliance_id: str, brightness: int):
         """Set brightness."""
+        LOGGER.debug("_set_brightness %d", brightness)
         rsp = await self.coordinator.client.set_brightness_percentage(
             appliance_id, DuerOSLight.brightness_ha_to_dueros(brightness)
         )
@@ -87,21 +88,30 @@ class DuerOSLight(LightEntity, DuerOSEntity):
 
     async def _set_color_temp(self, appliance_id: str, color_temp_kelvin: int):
         """Set color temp."""
+        LOGGER.debug(
+            "_set_color_temp %d, min: %d, max: %d",
+            color_temp_kelvin,
+            self.min_color_temp_kelvin,
+            self.max_color_temp_kelvin,
+        )
         color_temp = ColorTemperatureInKelvin(
             1
             + int(
                 (color_temp_kelvin - self.min_color_temp_kelvin)
+                * 100
                 / (self.max_color_temp_kelvin - self.min_color_temp_kelvin)
             ),
             self.min_color_temp_kelvin,
             self.max_color_temp_kelvin,
         )
+        LOGGER.debug("_set_color_temp %d", color_temp.in_kelvin)
         rsp = await self.coordinator.client.set_color_temperature(
             appliance_id, color_temp
         )
         DuerOSEntity._check_response(rsp)
 
     async def async_turn_on(self, **kwargs):
+        LOGGER.debug("async_turn_on %s", kwargs)
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
         if brightness:
             self._attr_brightness = brightness
@@ -114,12 +124,14 @@ class DuerOSLight(LightEntity, DuerOSEntity):
             await self._set_color_temp(
                 self._appliance.appliance_id, color_temp_in_kelvin
             )
-        self._attr_is_on = True
-        rsp = await self.coordinator.client.turn_on(self._appliance.appliance_id)
-        DuerOSEntity._check_response(rsp)
-        await self.coordinator.async_request_refresh()
+        if len(kwargs) == 0:
+            self._attr_is_on = True
+            rsp = await self.coordinator.client.turn_on(self._appliance.appliance_id)
+            DuerOSEntity._check_response(rsp)
+            await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs):
+        LOGGER.debug("async_turn_off %s", kwargs)
         rsp = await self.coordinator.client.turn_off(self._appliance.appliance_id)
         DuerOSEntity._check_response(rsp)
         await self.coordinator.async_request_refresh()

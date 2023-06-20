@@ -59,24 +59,28 @@ class DuerOSCover(CoverEntity, DuerOSEntity):
 
     async def async_open_cover(self, **kwargs) -> None:
         """Open the cover."""
+        LOGGER.debug("async_open_cover %s", kwargs)
         rsp = await self.coordinator.client.turn_on(self._appliance.appliance_id)
         DuerOSEntity._check_response(rsp)
         await self.coordinator.async_request_refresh()
 
     async def async_close_cover(self, **kwargs) -> None:
         """Close the cover."""
+        LOGGER.debug("async_close_cover %s", kwargs)
         rsp = await self.coordinator.client.turn_off(self._appliance.appliance_id)
         DuerOSEntity._check_response(rsp)
         await self.coordinator.async_request_refresh()
 
     async def async_stop_cover(self, **kwargs) -> None:
         """Stop the cover."""
+        LOGGER.debug("async_stop_cover %s", kwargs)
         rsp = await self.coordinator.client.pause(self._appliance.appliance_id)
         DuerOSEntity._check_response(rsp)
         await self.coordinator.async_request_refresh()
 
     async def async_set_cover_position(self, **kwargs) -> None:
         """Move the cover to a specific position."""
+        LOGGER.debug("async_set_cover_position %s", kwargs)
         percent = kwargs.get(ATTR_POSITION, self.current_cover_position)
         rsp = await self.coordinator.client.turn_on_percent(
             self._appliance.appliance_id, Degree(percent)
